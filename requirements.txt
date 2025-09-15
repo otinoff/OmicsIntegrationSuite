@@ -1,0 +1,23 @@
+# Core genomics libraries
+pysam==0.21.0
+cyvcf2==0.30.22
+biopython==1.81
+pybedtools==0.9.0
+pysamstats==1.1.2
+
+# Data processing
+numpy==1.24.3
+pandas==2.0.3
+
+# Visualization
+matplotlib==3.7.1
+seaborn==0.12.2
+
+# Testing
+pytest==7.4.0
+pytest-cov==4.1.0
+
+# Additional utilities
+tqdm==4.65.0
+pyyaml==6.0
+click==8.1.3

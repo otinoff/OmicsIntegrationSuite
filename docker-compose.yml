@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # Main processing service
+  omics-suite:
+    build: .
+    image: omics-suite:latest
+    container_name: omics-processor
+    volumes:
+      - ./data:/data
+      - ./modules:/app/modules
+      - ./results:/results
+    environment:
+      - PYTHONUNBUFFERED=1
+      - THREADS=8
+    networks:
+      - omics-net
+    command: python -m modules.genomics.genomics_processor --help
+    
+  # Jupyter notebook for interactive work
+  jupyter:
+    image: omics-suite:latest
+    container_name: omics-jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./data:/data
+      - ./modules:/app/modules
+      - ./notebooks:/notebooks
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - omics-net
+    command: >
+      bash -c "pip install jupyter notebook ipywidgets &&
+               jupyter notebook --ip=0.0.0.0 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password=''"
+    
+  # Optional: Development container with shell access
+  dev:
+    image: omics-suite:latest
+    container_name: omics-dev
+    volumes:
+      - ./data:/data
+      - ./modules:/app/modules
+      - ./results:/results
+      - ./tests:/app/tests
+    environment:
+      - PYTHONUNBUFFERED=1
+      - THREADS=8
+    networks:
+      - omics-net
+    stdin_open: true
+    tty: true
+    command: /bin/bash
+
+networks:
+  omics-net:
+    driver: bridge
+
+volumes:
+  omics-data:
+    driver: local

@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+*.egg-info/
+.coverage
+htmlcov/
+.tox/
+*.cover
+.cache
+
+# Data files (don't include in image)
+data/
+results/
+*.fastq
+*.fastq.gz
+*.fq
+*.fq.gz
+*.bam
+*.sam
+*.cram
+*.vcf
+*.vcf.gz
+*.bed
+*.bedgraph
+*.bigwig
+*.bw
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+docs/build/
+*.md
+README*
+
+# Notebooks
+*.ipynb
+notebooks/
+.ipynb_checkpoints/

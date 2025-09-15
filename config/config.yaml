@@ -1,0 +1,74 @@
+# Конфигурационный файл приложения
+
+# Общие настройки
+app:
+  name: "Платформа диагональной интеграции биологических данных"
+  version: "1.0.0"
+  author: "Разработчик"
+  description: "Локальное приложение для обработки мультимодальных биологических данных"
+
+# Пути к данным
+paths:
+  input_dir: "data/input"
+  output_dir: "data/output"
+  temp_dir: "data/temp"
+  logs_dir: "logs"
+
+# Настройки логирования
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/app.log"
+
+# Настройки модулей
+modules:
+  genomics:
+    enabled: true
+    threads: 4
+    memory_limit: "8GB"
+    
+  transcriptomics:
+    enabled: true
+    threads: 4
+    memory_limit: "8GB"
+    
+  mirna:
+    enabled: true
+    threads: 2
+    memory_limit: "4GB"
+    
+  proteomics:
+    enabled: true
+    threads: 4
+    memory_limit: "8GB"
+    
+  metabolomics:
+    enabled: true
+    threads: 4
+    memory_limit: "8GB"
+    
+  integration:
+    enabled: true
+    threads: 2
+    memory_limit: "4GB"
+    
+  quality_control:
+    enabled: true
+    threads: 2
+    memory_limit: "4GB"
+    
+  reporting:
+    enabled: true
+    threads: 2
+    memory_limit: "4GB"
+
+# Настройки веб-интерфейса
+web:
+  host: "localhost"
+  port: 8000
+  debug: false
+
+# Настройки безопасности
+security:
+  data_encryption: false
+  access_control: true

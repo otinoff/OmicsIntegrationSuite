@@ -1,0 +1,66 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Deploy to server via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: 5.35.88.251
+        username: root
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        port: 22
+        script: |
+          # Создаем директорию если её нет
+          mkdir -p /var/OmicsIntegrationSuite
+          
+          # Переходим в директорию
+          cd /var/OmicsIntegrationSuite
+          
+          # Если это первый деплой - клонируем репозиторий
+          if [ ! -d ".git" ]; then
+            git clone https://github.com/otinoff/OmicsIntegrationSuite.git .
+          else
+            # Иначе - обновляем существующий репозиторий
+            git fetch origin
+            git reset --hard origin/main || git reset --hard origin/master
+          fi
+          
+          # Устанавливаем зависимости Python (если есть requirements.txt)
+          if [ -f "requirements.txt" ]; then
+            pip3 install -r requirements.txt
+          fi
+          
+          # Делаем скрипты исполняемыми
+          chmod +x *.sh 2>/dev/null || true
+          
+          # Перезапускаем сервис если он существует
+          # systemctl restart omics-integration || true
+          
+          echo "Deployment completed successfully!"
+    
+    - name: Health Check
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: 5.35.88.251
+        username: root
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        port: 22
+        script: |
+          cd /var/OmicsIntegrationSuite
+          # Проверяем, что основные файлы на месте
+          ls -la main.py
+          python3 --version
+          echo "Health check passed!"

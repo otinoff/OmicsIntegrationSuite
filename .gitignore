@@ -1,0 +1,88 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+.ENV
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Data files (keep structure but ignore actual data)
+data/input/**/*.fastq
+data/input/**/*.fq
+data/input/**/*.bam
+data/input/**/*.sam
+data/input/**/*.vcf
+data/input/**/*.vcf.gz
+data/input/**/*.h5
+data/input/**/*.h5ad
+data/input/**/*.tsv
+data/input/**/*.csv
+data/output/**/*
+!data/output/.gitkeep
+!data/input/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Documentation builds
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# Credentials and secrets
+*.key
+*.pem
+*.crt
+credentials.json
+secrets.yaml
+.env.local
+.env.production
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# OS specific
+Thumbs.db
