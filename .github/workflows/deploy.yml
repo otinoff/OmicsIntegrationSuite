@@ -46,10 +46,14 @@ jobs:
           # Делаем скрипты исполняемыми
           chmod +x *.sh 2>/dev/null || true
           
-          # Перезапускаем сервис если он существует
-          # systemctl restart omics-integration || true
+          # Запускаем Streamlit веб-интерфейс
+          ./start_streamlit.sh
+          
+          # Настраиваем Nginx для проксирования (если нужно)
+          # Streamlit будет доступен на порту 8501
           
           echo "Deployment completed successfully!"
+          echo "Web interface available at: http://omicsintegrationsuite.onff.ru/"
     
     - name: Health Check
       uses: appleboy/ssh-action@v1.0.0
