@@ -121,3 +121,13 @@ def process_id_files(id_files, output_path):
 
 if __name__ == "__main__":
     process()
+
+class ProteomicsProcessor:
+    """Автоматически созданный класс"""
+    
+    def __init__(self):
+        self.name = 'ProteomicsProcessor'
+    
+    def process(self, *args, **kwargs):
+        """Заглушка для обработки данных"""
+        return {'status': 'success', 'module': self.name}

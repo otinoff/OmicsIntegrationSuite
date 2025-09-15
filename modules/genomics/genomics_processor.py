@@ -47,6 +47,56 @@ except ImportError:
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+class GenomicsProcessor:
+    """
+    Класс для обработки геномных данных
+    """
+    
+    def __init__(self):
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.input_path = None
+        self.output_path = None
+        self.reference_genome = None
+        
+    def set_paths(self, input_path=None, output_path=None, reference_genome=None):
+        """Установка путей для обработки"""
+        self.input_path = input_path or "data/input/genomics"
+        self.output_path = output_path or "data/output/genomics"
+        self.reference_genome = reference_genome
+        
+        # Создание директорий если они не существуют
+        Path(self.input_path).mkdir(parents=True, exist_ok=True)
+        Path(self.output_path).mkdir(parents=True, exist_ok=True)
+        
+    def process(self, input_path=None, output_path=None, reference_genome=None):
+        """
+        Основная функция обработки геномных данных
+        
+        Args:
+            input_path (str): Путь к входным данным
+            output_path (str): Путь к выходным данным
+            reference_genome (str): Путь к референсному геному (опционально)
+        """
+        self.set_paths(input_path, output_path, reference_genome)
+        
+        self.logger.info("Запуск модуля обработки геномных данных")
+        self.logger.info(f"Входная директория: {self.input_path}")
+        self.logger.info(f"Выходная директория: {self.output_path}")
+        
+        # Проверка наличия входных файлов
+        if not os.path.exists(self.input_path):
+            self.logger.error(f"Входная директория {self.input_path} не существует")
+            return
+        
+        # Обработка файлов
+        process_files(self.input_path, self.output_path, self.reference_genome)
+        
+        self.logger.info("Обработка геномных данных завершена")
+        
+    def get_status(self):
+        """Получение статуса обработки"""
+        return {"status": "ready", "module": "genomics"}
+
 def process(input_path=None, output_path=None, reference_genome=None):
     """
     Основная функция обработки геномных данных

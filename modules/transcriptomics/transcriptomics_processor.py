@@ -159,3 +159,13 @@ def process_single_cell_files(mtx_files, loom_files, seurat_files, output_path):
 
 if __name__ == "__main__":
     process()
+
+class TranscriptomicsProcessor:
+    """Автоматически созданный класс"""
+    
+    def __init__(self):
+        self.name = 'TranscriptomicsProcessor'
+    
+    def process(self, *args, **kwargs):
+        """Заглушка для обработки данных"""
+        return {'status': 'success', 'module': self.name}

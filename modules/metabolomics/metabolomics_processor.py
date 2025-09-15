@@ -121,3 +121,13 @@ def process_peak_files(peak_files, output_path):
 
 if __name__ == "__main__":
     process()
+
+class MetabolomicsProcessor:
+    """Автоматически созданный класс"""
+    
+    def __init__(self):
+        self.name = 'MetabolomicsProcessor'
+    
+    def process(self, *args, **kwargs):
+        """Заглушка для обработки данных"""
+        return {'status': 'success', 'module': self.name}

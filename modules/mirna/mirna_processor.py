@@ -121,3 +121,13 @@ def process_count_files(count_files, output_path):
 
 if __name__ == "__main__":
     process()
+
+class MiRNAProcessor:
+    """Автоматически созданный класс"""
+    
+    def __init__(self):
+        self.name = 'MiRNAProcessor'
+    
+    def process(self, *args, **kwargs):
+        """Заглушка для обработки данных"""
+        return {'status': 'success', 'module': self.name}

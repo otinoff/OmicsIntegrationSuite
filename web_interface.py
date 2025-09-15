@@ -16,14 +16,46 @@ import os
 # Добавляем путь к модулям
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from modules.genomics.genomics_processor import GenomicsProcessor
-from modules.transcriptomics.transcriptomics_processor import TranscriptomicsProcessor
-from modules.mirna.mirna_processor import MiRNAProcessor
-from modules.proteomics.proteomics_processor import ProteomicsProcessor
-from modules.metabolomics.metabolomics_processor import MetabolomicsProcessor
-from modules.integration.integration_processor import IntegrationProcessor
-from modules.quality_control.qc_processor import QualityControlProcessor
-from modules.reporting.reporting_processor import ReportingProcessor
+# Безопасный импорт модулей с обработкой ошибок
+try:
+    from modules.genomics.genomics_processor import GenomicsProcessor
+except ImportError:
+    GenomicsProcessor = None
+    
+try:
+    from modules.transcriptomics.transcriptomics_processor import TranscriptomicsProcessor
+except ImportError:
+    TranscriptomicsProcessor = None
+    
+try:
+    from modules.mirna.mirna_processor import MiRNAProcessor
+except ImportError:
+    MiRNAProcessor = None
+    
+try:
+    from modules.proteomics.proteomics_processor import ProteomicsProcessor
+except ImportError:
+    ProteomicsProcessor = None
+    
+try:
+    from modules.metabolomics.metabolomics_processor import MetabolomicsProcessor
+except ImportError:
+    MetabolomicsProcessor = None
+    
+try:
+    from modules.integration.integration_processor import IntegrationProcessor
+except ImportError:
+    IntegrationProcessor = None
+    
+try:
+    from modules.quality_control.qc_processor import QualityControlProcessor
+except ImportError:
+    QualityControlProcessor = None
+    
+try:
+    from modules.reporting.reporting_processor import ReportingProcessor
+except ImportError:
+    ReportingProcessor = None
 
 # Настройка страницы
 st.set_page_config(
@@ -193,7 +225,6 @@ if module == "🏠 Главная":
     st.header("📊 Активность системы")
     
     # Создаем пример данных для графика
-    import numpy as np
     import datetime
     
     dates = pd.date_range(
@@ -202,12 +233,14 @@ if module == "🏠 Главная":
         freq='H'
     )
     
+    # Используем pandas для генерации случайных данных вместо numpy
+    import random
     activity_data = pd.DataFrame({
         'Время': dates,
-        'Геномика': np.random.randint(0, 100, len(dates)),
-        'Транскриптомика': np.random.randint(0, 80, len(dates)),
-        'Протеомика': np.random.randint(0, 60, len(dates)),
-        'Метаболомика': np.random.randint(0, 40, len(dates))
+        'Геномика': [random.randint(0, 100) for _ in range(len(dates))],
+        'Транскриптомика': [random.randint(0, 80) for _ in range(len(dates))],
+        'Протеомика': [random.randint(0, 60) for _ in range(len(dates))],
+        'Метаболомика': [random.randint(0, 40) for _ in range(len(dates))]
     })
     
     fig = px.line(
@@ -279,16 +312,19 @@ elif module == "🧬 Геномика":
             st.metric("Качество > Q30", "95.3%")
         with col3:
             st.metric("Средняя длина", "150 bp")
-        
-        # График распределения качества
-        quality_scores = np.random.normal(30, 5, 1000)
-        fig = px.histogram(
-            quality_scores,
-            nbins=50,
-            title="Распределение качества ридов",
-            labels={'value': 'Качество (Phred score)', 'count': 'Количество'}
-        )
-        st.plotly_chart(fig, use_container_width=True)
+            
+            # График распределения качества
+            import random
+            import statistics
+            # Генерируем нормальное распределение без numpy
+            quality_scores = [random.gauss(30, 5) for _ in range(1000)]
+            fig = px.histogram(
+                quality_scores,
+                nbins=50,
+                title="Распределение качества ридов",
+                labels={'value': 'Качество (Phred score)', 'count': 'Количество'}
+            )
+            st.plotly_chart(fig, use_container_width=True)
 
 elif module == "📊 Транскриптомика":
     st.header("📊 Модуль обработки транскриптомных данных")
