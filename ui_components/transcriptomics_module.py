@@ -1552,14 +1552,31 @@ def process_10x_genomics_files(matrix_file, features_file, barcodes_file, **kwar
                 try:
                     update_log("🔬 Загрузка данных через scanpy...", 9)
                     import scanpy as sc
-                    
+                    import pandas as pd
+
+                    # Определяем формат features файла (v2 или v3)
+                    features_df = pd.read_csv(features_path, sep='\t', header=None)
+                    n_cols = features_df.shape[1]
+
+                    update_log(f"📊 Features файл имеет {n_cols} колонок", 9)
+
+                    # Выбираем параметр var_names в зависимости от формата
+                    if n_cols >= 2:
+                        # v2/v3 формат: используем вторую колонку (gene_symbols)
+                        var_names_param = 'gene_symbols'
+                    else:
+                        # Только 1 колонка: используем gene_ids
+                        var_names_param = 'gene_ids'
+
+                    update_log(f"🔧 Используем var_names='{var_names_param}'", 9)
+
                     # Загружаем 10x данные
                     adata = sc.read_10x_mtx(
                         temp_dir,
-                        var_names='gene_symbols',
+                        var_names=var_names_param,
                         cache=True
                     )
-                    adata.var_names_unique = True
+                    adata.var_names_make_unique()
                     
                     update_log(f"✅ Данные загружены: {adata.n_obs} клеток × {adata.n_vars} генов", 10)
                     st.success(f"✅ Данные загружены: {adata.n_obs} клеток × {adata.n_vars} генов")
