@@ -158,7 +158,7 @@ def render_home_page():
     dates = pd.date_range(
         start=datetime.datetime.now() - datetime.timedelta(days=7),
         end=datetime.datetime.now(),
-        freq='H'
+        freq='h'
     )
     
     activity_data = pd.DataFrame({
@@ -185,7 +185,7 @@ def render_home_page():
         hovermode='x unified'
     )
     
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig)
 
 if __name__ == "__main__":
     render_home_page()

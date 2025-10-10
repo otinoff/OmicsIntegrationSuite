@@ -77,7 +77,7 @@ def render_genomics_module():
             filter_contamination = st.checkbox("Фильтр контаминации", value=True)
         
         st.markdown("---")
-        if st.button("🚀 Начать обработку", type="primary", use_container_width=True):
+        if st.button("🚀 Начать обработку", type="primary"):
             with st.spinner("Обработка данных..."):
                 progress_bar = st.progress(0)
                 status_text = st.empty()
@@ -123,7 +123,7 @@ def render_genomics_module():
             font=dict(size=12)
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig)
         
         # Таблица результатов
         st.markdown("### 📋 Детальная статистика")
@@ -134,7 +134,7 @@ def render_genomics_module():
             'Статус': ['✅', '✅', '✅', '✅', '✅']
         })
         
-        st.dataframe(results_df, use_container_width=True, hide_index=True)
+        st.dataframe(results_df, hide_index=True)
 
 if __name__ == "__main__":
     render_genomics_module()

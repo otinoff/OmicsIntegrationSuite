@@ -84,7 +84,7 @@ def render_reporting_module():
             filter_contamination = st.checkbox("Фильтр контаминации", value=True)
         
         st.markdown("---")
-        if st.button("🚀 Начать обработку", type="primary", use_container_width=True):
+        if st.button("🚀 Начать обработку", type="primary"):
             with st.spinner("Обработка данных..."):
                 progress_bar = st.progress(0)
                 status_text = st.empty()
@@ -131,7 +131,7 @@ def render_reporting_module():
             font=dict(size=12)
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig)
         
         # Bar chart типов отчетов
         st.markdown("### 📊 Типы сгенерированных отчетов")
@@ -154,7 +154,7 @@ def render_reporting_module():
             font=dict(size=12)
         )
         
-        st.plotly_chart(fig_bar, use_container_width=True)
+        st.plotly_chart(fig_bar)
         
         # Pie chart статусов отчетов
         st.markdown("### 📉 Статусы отчетов")
@@ -175,7 +175,7 @@ def render_reporting_module():
             font=dict(size=12)
         )
         
-        st.plotly_chart(fig_pie, use_container_width=True)
+        st.plotly_chart(fig_pie)
         
         # Таблица результатов
         st.markdown("### 📋 Детальная статистика")
@@ -186,7 +186,7 @@ def render_reporting_module():
             'Статус': ['✅', '✅', '✅', '✅', '✅']
         })
         
-        st.dataframe(results_df, use_container_width=True, hide_index=True)
+        st.dataframe(results_df, hide_index=True)
         
         # Пример отчета
         st.markdown("---")

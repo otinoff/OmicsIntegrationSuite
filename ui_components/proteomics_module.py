@@ -81,7 +81,7 @@ def render_proteomics_module():
             filter_decoy_hits = st.checkbox("Фильтр decoy совпадений", value=True)
         
         st.markdown("---")
-        if st.button("🚀 Начать обработку", type="primary", use_container_width=True):
+        if st.button("🚀 Начать обработку", type="primary"):
             with st.spinner("Обработка данных..."):
                 progress_bar = st.progress(0)
                 status_text = st.empty()
@@ -127,7 +127,7 @@ def render_proteomics_module():
             font=dict(size=12)
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig)
         
         # Volcano plot
         st.markdown("### 📊 Volcano plot дифференциальной экспрессии")
@@ -154,7 +154,7 @@ def render_proteomics_module():
             font=dict(size=12)
         )
         
-        st.plotly_chart(fig_volcano, use_container_width=True)
+        st.plotly_chart(fig_volcano)
         
         # Таблица результатов
         st.markdown("### 📋 Детальная статистика")
@@ -165,7 +165,7 @@ def render_proteomics_module():
             'Статус': ['✅', '✅', '✅', '✅', '✅']
         })
         
-        st.dataframe(results_df, use_container_width=True, hide_index=True)
+        st.dataframe(results_df, hide_index=True)
 
 if __name__ == "__main__":
     render_proteomics_module()

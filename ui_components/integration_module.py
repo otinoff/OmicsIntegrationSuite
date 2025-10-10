@@ -83,7 +83,7 @@ def render_integration_module():
             filter_contamination = st.checkbox("Фильтр контаминации", value=True)
         
         st.markdown("---")
-        if st.button("🚀 Начать обработку", type="primary", use_container_width=True):
+        if st.button("🚀 Начать обработку", type="primary"):
             with st.spinner("Обработка данных..."):
                 progress_bar = st.progress(0)
                 status_text = st.empty()
@@ -135,7 +135,7 @@ def render_integration_module():
             font=dict(size=12)
         )
         
-        st.plotly_chart(fig_corr, use_container_width=True)
+        st.plotly_chart(fig_corr)
         
         # Network graph
         st.markdown("### 📊 Сетевой анализ интеграции")
@@ -194,7 +194,7 @@ def render_integration_module():
             yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)
         )
         
-        st.plotly_chart(fig_network, use_container_width=True)
+        st.plotly_chart(fig_network)
         
         # Таблица результатов
         st.markdown("### 📋 Детальная статистика")
@@ -205,7 +205,7 @@ def render_integration_module():
             'Статус': ['✅', '✅', '✅', '✅', '✅']
         })
         
-        st.dataframe(results_df, use_container_width=True, hide_index=True)
+        st.dataframe(results_df, hide_index=True)
 
 if __name__ == "__main__":
     render_integration_module()

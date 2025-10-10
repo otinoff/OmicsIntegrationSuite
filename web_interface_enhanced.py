@@ -576,7 +576,7 @@ if selected_module == "🏠 Главная":
     dates = pd.date_range(
         start=datetime.datetime.now() - datetime.timedelta(days=7),
         end=datetime.datetime.now(),
-        freq='H'
+        freq='h'
     )
     
     activity_data = pd.DataFrame({
@@ -603,7 +603,7 @@ if selected_module == "🏠 Главная":
         hovermode='x unified'
     )
     
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig)
 
 elif selected_module == "🧬 Геномика":
     st.header("🧬 Модуль обработки геномных данных")
@@ -672,7 +672,7 @@ elif selected_module == "🧬 Геномика":
             filter_contamination = st.checkbox("Фильтр контаминации", value=True)
         
         st.markdown("---")
-        if st.button("🚀 Начать обработку", type="primary", use_container_width=True):
+        if st.button("🚀 Начать обработку", type="primary"):
             with st.spinner("Обработка данных..."):
                 progress_bar = st.progress(0)
                 status_text = st.empty()
@@ -719,7 +719,7 @@ elif selected_module == "🧬 Геномика":
             font=dict(size=12)
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig)
         
         # Таблица результатов
         st.markdown("### 📋 Детальная статистика")
@@ -730,7 +730,7 @@ elif selected_module == "🧬 Геномика":
             'Статус': ['✅', '✅', '✅', '✅', '✅']
         })
         
-        st.dataframe(results_df, use_container_width=True, hide_index=True)
+        st.dataframe(results_df, hide_index=True)
 
 elif selected_module == "📊 Транскриптомика":
     st.header("📊 Модуль обработки транскриптомных данных")

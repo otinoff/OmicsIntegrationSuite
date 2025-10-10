@@ -81,7 +81,7 @@ def render_metabolomics_module():
             filter_adducts = st.checkbox("Фильтр аддуктов", value=True)
         
         st.markdown("---")
-        if st.button("🚀 Начать обработку", type="primary", use_container_width=True):
+        if st.button("🚀 Начать обработку", type="primary"):
             with st.spinner("Обработка данных..."):
                 progress_bar = st.progress(0)
                 status_text = st.empty()
@@ -127,7 +127,7 @@ def render_metabolomics_module():
             font=dict(size=12)
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig)
         
         # PCA plot
         st.markdown("### 📊 PCA анализ образцов")
@@ -156,7 +156,7 @@ def render_metabolomics_module():
             font=dict(size=12)
         )
         
-        st.plotly_chart(fig_pca, use_container_width=True)
+        st.plotly_chart(fig_pca)
         
         # Heatmap экспрессии
         st.markdown("### 📊 Heatmap экспрессии метаболитов")
@@ -187,7 +187,7 @@ def render_metabolomics_module():
             font=dict(size=8)
         )
         
-        st.plotly_chart(fig_heatmap, use_container_width=True)
+        st.plotly_chart(fig_heatmap)
         
         # Таблица результатов
         st.markdown("### 📋 Детальная статистика")
@@ -198,7 +198,7 @@ def render_metabolomics_module():
             'Статус': ['✅', '✅', '✅', '✅', '✅']
         })
         
-        st.dataframe(results_df, use_container_width=True, hide_index=True)
+        st.dataframe(results_df, hide_index=True)
 
 if __name__ == "__main__":
     render_metabolomics_module()

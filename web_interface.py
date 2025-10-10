@@ -107,21 +107,35 @@ st.markdown("""
 st.sidebar.title("🎛️ Панель управления")
 st.sidebar.markdown("---")
 
-# Выбор модуля
-module = st.sidebar.selectbox(
-    "Выберите модуль",
-    [
-        "🏠 Главная",
-        "🧬 Геномика",
-        "📊 Транскриптомика",
-        "🔬 МикроРНК",
-        "🦠 Протеомика",
-        "⚗️ Метаболомика",
-        "🔄 Интеграция данных",
-        "✅ Контроль качества",
-        "📈 Отчеты"
-    ]
-)
+# Выбор модуля через кнопки
+st.sidebar.markdown("### 📦 Модули")
+
+# Инициализация состояния
+if 'selected_module' not in st.session_state:
+    st.session_state.selected_module = "🏠 Главная"
+
+modules = [
+    "🏠 Главная",
+    "🧬 Геномика",
+    "📊 Транскриптомика",
+    "🔬 МикроРНК",
+    "🦠 Протеомика",
+    "⚗️ Метаболомика",
+    "🔄 Интеграция данных",
+    "✅ Контроль качества",
+    "📈 Отчеты"
+]
+
+for mod in modules:
+    if st.sidebar.button(
+        mod,
+        key=f"btn_{mod}",
+        
+        type="primary" if st.session_state.selected_module == mod else "secondary"
+    ):
+        st.session_state.selected_module = mod
+
+module = st.session_state.selected_module
 
 # Статус системы
 st.sidebar.markdown("---")
@@ -230,7 +244,7 @@ if module == "🏠 Главная":
     dates = pd.date_range(
         start=datetime.datetime.now() - datetime.timedelta(days=7),
         end=datetime.datetime.now(),
-        freq='H'
+        freq='h'
     )
     
     # Используем pandas для генерации случайных данных вместо numpy
@@ -251,7 +265,7 @@ if module == "🏠 Главная":
         labels={'value': 'Количество процессов', 'variable': 'Модуль'}
     )
     
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig)
 
 elif module == "🧬 Геномика":
     st.header("🧬 Модуль обработки геномных данных")
@@ -324,13 +338,17 @@ elif module == "🧬 Геномика":
                 title="Распределение качества ридов",
                 labels={'value': 'Качество (Phred score)', 'count': 'Количество'}
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig)
 
 elif module == "📊 Транскриптомика":
-    st.header("📊 Модуль обработки транскриптомных данных")
-    st.info("Модуль транскриптомики позволяет анализировать данные RNA-seq")
-    
-    # Добавьте функционал для транскриптомики
+    # Импорт UI компонента транскриптомики
+    try:
+        from ui_components.transcriptomics_module import render_transcriptomics_module
+        render_transcriptomics_module()
+    except ImportError as e:
+        st.error(f"❌ Ошибка загрузки модуля транскриптомики: {e}")
+        st.header("📊 Модуль обработки транскриптомных данных")
+        st.info("Модуль транскриптомики временно недоступен. Проверьте установку компонентов.")
 
 elif module == "🔬 МикроРНК":
     st.header("🔬 Модуль обработки данных микроРНК")
