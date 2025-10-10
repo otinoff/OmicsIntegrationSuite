@@ -18,6 +18,7 @@ from typing import Dict, Any, Optional, List
 import warnings
 import logging
 import io
+import traceback
 from contextlib import contextmanager
 
 # Подавление предупреждений
@@ -1583,19 +1584,25 @@ def process_10x_genomics_files(matrix_file, features_file, barcodes_file, **kwar
                             **kwargs
                         )
                 
-                except ImportError:
+                except ImportError as ie:
                     st.error("❌ Для работы с 10x Genomics данными необходим scanpy: pip install scanpy")
-                
+                    st.error(f"Детали: {str(ie)}")
+                except Exception as inner_e:
+                    st.error(f"❌ Ошибка при загрузке 10x данных: {str(inner_e)}")
+                    st.code(traceback.format_exc(), language="python")
+
         except Exception as e:
-            st.error(f"❌ Ошибка обработки 10x Genomics файлов: {e}")
+            st.error(f"❌ Ошибка обработки 10x Genomics файлов: {str(e)}")
+            st.code(traceback.format_exc(), language="python")
         finally:
             # Очистка временных файлов
             for temp_file in [matrix_temp, features_temp, barcodes_temp]:
                 if temp_file and os.path.exists(temp_file):
                     os.unlink(temp_file)
-                    
+
     except Exception as e:
-        st.error(f"❌ Ошибка обработки 10x Genomics файлов: {e}")
+        st.error(f"❌ Внешняя ошибка обработки 10x Genomics файлов: {str(e)}")
+        st.code(traceback.format_exc(), language="python")
         # Очистка при ошибке
         if 'matrix_temp' in locals() and matrix_temp and os.path.exists(matrix_temp):
             os.unlink(matrix_temp)
