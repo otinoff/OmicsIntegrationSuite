@@ -268,77 +268,18 @@ if module == "🏠 Главная":
     st.plotly_chart(fig)
 
 elif module == "🧬 Геномика":
-    st.header("🧬 Модуль обработки геномных данных")
-    
-    tab1, tab2, tab3 = st.tabs(["Загрузка данных", "Обработка", "Результаты"])
-    
-    with tab1:
-        st.subheader("Загрузка файлов")
-        
-        file_type = st.selectbox(
-            "Выберите тип файла",
-            ["FASTQ", "BAM/SAM", "VCF"]
-        )
-        
-        uploaded_file = st.file_uploader(
-            f"Загрузите {file_type} файл",
-            type=['fastq', 'fq', 'bam', 'sam', 'vcf'] if file_type == "FASTQ" else 
-                  ['bam', 'sam'] if file_type == "BAM/SAM" else ['vcf'],
-            accept_multiple_files=False
-        )
-        
-        if uploaded_file:
-            st.success(f"✅ Файл {uploaded_file.name} успешно загружен")
-            st.info(f"Размер: {uploaded_file.size / 1024 / 1024:.2f} MB")
-    
-    with tab2:
-        st.subheader("Параметры обработки")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            quality_threshold = st.slider("Порог качества", 0, 40, 20)
-            min_length = st.number_input("Минимальная длина", value=50)
-            
-        with col2:
-            trim_adapters = st.checkbox("Удалить адаптеры", value=True)
-            normalize = st.checkbox("Нормализация", value=True)
-        
-        if st.button("🚀 Начать обработку", type="primary"):
-            with st.spinner("Обработка данных..."):
-                progress_bar = st.progress(0)
-                for i in range(100):
-                    import time
-                    time.sleep(0.01)
-                    progress_bar.progress(i + 1)
-                st.success("✅ Обработка завершена!")
-    
-    with tab3:
-        st.subheader("Результаты анализа")
-        
-        # Пример результатов
-        st.markdown("### Статистика качества")
-        
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Всего ридов", "1,234,567")
-        with col2:
-            st.metric("Качество > Q30", "95.3%")
-        with col3:
-            st.metric("Средняя длина", "150 bp")
-            
-            # График распределения качества
-            import random
-            import statistics
-            # Генерируем нормальное распределение без numpy
-            quality_scores = [random.gauss(30, 5) for _ in range(1000)]
-            fig = px.histogram(
-                quality_scores,
-                nbins=50,
-                title="Распределение качества ридов",
-                labels={'value': 'Качество (Phred score)', 'count': 'Количество'}
-            )
-            st.plotly_chart(fig)
+    # Импорт UI компонента геномики с интеграцией QualityControlSuite
+    try:
+        from ui_components.genomics_module import render_genomics_module
+        render_genomics_module()
+    except ImportError as e:
+        st.error(f"❌ Ошибка загрузки модуля геномики: {e}")
+        st.header("🧬 Модуль обработки геномных данных")
+        st.info("Модуль геномики временно недоступен. Проверьте установку компонентов.")
+    except Exception as e:
+        st.error(f"❌ Ошибка выполнения модуля геномики: {e}")
+        st.header("🧬 Модуль обработки геномных данных")
+        st.info("Произошла ошибка при загрузке модуля. Проверьте логи для деталей.")
 
 elif module == "📊 Транскриптомика":
     # Импорт UI компонента транскриптомики

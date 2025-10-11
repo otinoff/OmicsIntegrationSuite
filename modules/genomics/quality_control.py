@@ -4,22 +4,387 @@
 """
 Module for quality control of genomic data
 Implements quality control for all stages of processing
+
+Enhanced with QualityControlSuite components:
+- FastQAnalyzer for high-performance FASTQ analysis
+- Reporter for HTML report generation with visual markers
+- Unified logging system with [CHECK], [OK], [ERROR] markers
 """
 
 import os
 import subprocess
 import logging
 from pathlib import Path
-import pysam
-import pysamstats
-from Bio import SeqIO
-from Bio.SeqUtils import GC
 import json
-import matplotlib.pyplot as plt
+
+# Import QualityControlSuite components (always available for FASTQ QC)
+from .qc_core.analyzer import FastQAnalyzer
+from .qc_core.reporter import Reporter
+from .qc_utils.io_handler import IOHandler
+from .logging_system import QCLogger, get_logger
+
+# Conditional imports for BAM/VCF processing (not required for FASTQ QC)
+try:
+    import pysam
+    import pysamstats
+    BAM_SUPPORT = True
+except ImportError:
+    BAM_SUPPORT = False
+    logger_temp = logging.getLogger(__name__)
+    logger_temp.warning("pysam/pysamstats not available. BAM/CRAM analysis disabled.")
+
+try:
+    from Bio import SeqIO
+    from Bio.SeqUtils import GC
+    BIOPYTHON_SUPPORT = True
+except ImportError:
+    BIOPYTHON_SUPPORT = False
+    logger_temp = logging.getLogger(__name__)
+    logger_temp.warning("Biopython not available. GC analysis disabled.")
+
+try:
+    import matplotlib.pyplot as plt
+    MATPLOTLIB_SUPPORT = True
+except ImportError:
+    MATPLOTLIB_SUPPORT = False
+    logger_temp = logging.getLogger(__name__)
+    logger_temp.warning("matplotlib not available. Plotting disabled.")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Initialize QC logger
+qc_logger = get_logger(verbose=True, use_colors=False)  # Disable colors for Windows compatibility
+
+
+def has_sequali():
+    """
+    Check if Sequali is installed and available
+
+    Returns:
+        bool: True if Sequali is available, False otherwise
+    """
+    try:
+        result = subprocess.run(
+            ['sequali', '--version'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        return result.returncode == 0
+    except (FileNotFoundError, subprocess.SubprocessError, subprocess.TimeoutExpired):
+        return False
+
+
+def run_sequali_qc(input_fastq, output_dir):
+    """
+    Run FASTQ QC using Sequali engine (C++ implementation)
+
+    This is the PRIMARY method based on fastqcli.py from QualityControlSuite.
+    Sequali generates professional HTML and JSON reports with comprehensive metrics.
+
+    Args:
+        input_fastq (str): Path to input FASTQ file
+        output_dir (Path): Output directory
+
+    Returns:
+        dict: Dictionary with analysis metrics and report paths, or None if failed
+    """
+    qc_logger.header(f"Sequali QC for {Path(input_fastq).name}")
+    qc_logger.install("Using Sequali C++ engine (PRIMARY METHOD)")
+
+    try:
+        file_path = Path(input_fastq)
+        if not file_path.exists():
+            qc_logger.error(f"File not found: {input_fastq}")
+            return None
+
+        qc_logger.info(f"File size: {file_path.stat().st_size / (1024**2):.1f} MB")
+
+        # Ensure output directory exists
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        # Construct Sequali command
+        full_name = file_path.name
+        base_name = file_path.stem
+
+        # Sequali command format from fastqcli.py
+        cmd = [
+            'sequali',
+            '--dir', str(output_path),
+            '--html', full_name,  # HTML report name
+            '--json', full_name,  # JSON metrics name
+            str(file_path)
+        ]
+
+        qc_logger.running(f"Command: {' '.join(cmd)}")
+        qc_logger.analyze("Running Sequali analysis...")
+
+        # Run Sequali
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=600  # 10 minutes timeout
+        )
+
+        # Show Sequali output
+        if result.stdout:
+            for line in result.stdout.splitlines():
+                if line.strip():
+                    qc_logger.info(f"   {line}")
+
+        if result.stderr:
+            for line in result.stderr.splitlines():
+                if line.strip():
+                    qc_logger.warning(f"   {line}")
+
+        if result.returncode != 0:
+            qc_logger.error(f"Sequali returned error code: {result.returncode}")
+            return None
+
+        # Find generated files (try multiple naming variants)
+        html_path = None
+        json_path = None
+
+        # Try different naming patterns
+        html_candidates = [
+            output_path / f"{full_name}.html",
+            output_path / f"{base_name}.html",
+            output_path / full_name,  # Sometimes Sequali creates file without extension
+            output_path / base_name
+        ]
+
+        json_candidates = [
+            output_path / f"{full_name}.json",
+            output_path / f"{base_name}.json"
+        ]
+
+        # Find HTML report
+        for candidate in html_candidates:
+            if candidate.exists() and candidate.stat().st_size > 10000:  # At least 10KB
+                html_path = candidate
+                qc_logger.ok(f"HTML report found: {candidate.name}")
+                break
+
+        # Find JSON metrics
+        for candidate in json_candidates:
+            if candidate.exists() and candidate.stat().st_size > 0:
+                json_path = candidate
+                qc_logger.ok(f"JSON metrics found: {candidate.name}")
+                break
+
+        if not html_path or not json_path:
+            qc_logger.warning("Sequali completed but output files not found in expected locations")
+            # List all files in output directory for debugging
+            qc_logger.debug(f"Files in {output_path}:")
+            for f in output_path.glob("*"):
+                qc_logger.debug(f"   - {f.name} ({f.stat().st_size} bytes)")
+            return None
+
+        # Read and parse JSON metrics
+        try:
+            with open(json_path, 'r', encoding='utf-8') as f:
+                json_data = json.load(f)
+
+            # Extract key metrics from Sequali JSON format
+            summary = json_data.get('summary', {})
+            total_reads = summary.get('total_reads', 0)
+            total_bases = summary.get('total_bases', 0)
+            mean_length = summary.get('mean_length', 0)
+            q20_bases = summary.get('q20_bases', 0)
+            q30_bases = summary.get('q30_bases', 0)
+            gc_bases = summary.get('total_gc_bases', 0)
+            n_bases = summary.get('total_n_bases', 0)
+
+            # Calculate percentages
+            q20_pct = (q20_bases / total_bases * 100) if total_bases > 0 else 0
+            q30_pct = (q30_bases / total_bases * 100) if total_bases > 0 else 0
+            gc_pct = (gc_bases / total_bases * 100) if total_bases > 0 else 0
+            n_pct = (n_bases / total_bases * 100) if total_bases > 0 else 0
+
+            # Determine status (using same logic as FastQAnalyzer)
+            if q30_pct >= 80 and n_pct < 5:
+                status = "PASS"
+            elif q30_pct >= 70 or n_pct < 10:
+                status = "WARNING"
+            else:
+                status = "FAIL"
+
+            # Format metrics to match FastQAnalyzer output format
+            metrics = {
+                'total_reads': total_reads,
+                'total_bases': total_bases,
+                'avg_read_length': mean_length,
+                'min_read_length': summary.get('min_length', 0),
+                'max_read_length': summary.get('max_length', 0),
+                'q20_percentage': q20_pct,
+                'q30_percentage': q30_pct,
+                'gc_content': gc_pct,
+                'n_percentage': n_pct,
+                'status': status
+            }
+
+            qc_logger.metrics(f"Total reads: {total_reads:,}")
+            qc_logger.metrics(f"Q30: {q30_pct:.1f}%")
+            qc_logger.metrics(f"GC content: {gc_pct:.1f}%")
+            qc_logger.metrics(f"Status: {status}")
+            qc_logger.summary("Sequali QC completed successfully!")
+
+            return {
+                'metrics': metrics,
+                'html_report': str(html_path),
+                'json_metrics': str(json_path),
+                'status': status,
+                'engine': 'sequali'
+            }
+
+        except Exception as e:
+            qc_logger.error(f"Error parsing Sequali JSON: {e}")
+            return None
+
+    except subprocess.TimeoutExpired:
+        qc_logger.error("Sequali analysis timed out (10 minutes)")
+        return None
+    except Exception as e:
+        qc_logger.error(f"Error running Sequali QC: {e}")
+        import traceback
+        qc_logger.debug(traceback.format_exc())
+        return None
+
+
+def run_python_fastq_qc(input_fastq, output_dir, sample_size=10000):
+    """
+    Run FASTQ QC using Python implementation (FALLBACK method)
+
+    This is the fallback method using FastQAnalyzer and Reporter.
+    Used when Sequali is not available.
+
+    Args:
+        input_fastq (str): Path to input FASTQ file
+        output_dir (Path): Output directory
+        sample_size (int): Number of reads to analyze (default: 10000)
+
+    Returns:
+        dict: Dictionary with analysis metrics and report paths, or None if failed
+    """
+    qc_logger.header(f"Python FASTQ QC for {Path(input_fastq).name}")
+    qc_logger.warning("Using Python fallback (Sequali not available)")
+
+    try:
+        # Validate input file
+        io_handler = IOHandler()
+        if not io_handler.validate_input(input_fastq):
+            qc_logger.error(f"Invalid FASTQ file: {input_fastq}")
+            return None
+
+        qc_logger.ok("Input file validated successfully")
+
+        # Initialize analyzer and reporter
+        analyzer = FastQAnalyzer(verbose=True)
+        reporter = Reporter()
+
+        # Run analysis
+        qc_logger.analyze(f"Analyzing {Path(input_fastq).name} (sample size: {sample_size})")
+        metrics = analyzer.analyze(input_fastq, sample_size=sample_size)
+
+        if not metrics or metrics.get('total_reads', 0) == 0:
+            qc_logger.error("No reads found in FASTQ file")
+            return None
+
+        qc_logger.ok(f"Analysis complete! Processed {metrics['total_reads']:,} reads")
+
+        # Display key metrics
+        qc_logger.metrics(f"Q30 percentage: {metrics['q30_percentage']:.1f}%")
+        qc_logger.metrics(f"GC content: {metrics['gc_content']:.1f}%")
+        qc_logger.metrics(f"Status: {metrics['status']}")
+
+        # Generate HTML report
+        qc_logger.html("Generating HTML report...")
+        html_path = output_dir / f"{Path(input_fastq).stem}_advanced_qc_report.html"
+        reporter.generate_html(metrics, str(html_path))
+        qc_logger.ok(f"HTML report generated: {html_path}")
+
+        # Save JSON metrics
+        qc_logger.json("Saving JSON metrics...")
+        json_path = output_dir / f"{Path(input_fastq).stem}_advanced_qc_metrics.json"
+        with open(json_path, 'w') as f:
+            json.dump(metrics, f, indent=2)
+        qc_logger.ok(f"JSON metrics saved: {json_path}")
+
+        qc_logger.summary(f"Python QC completed for {Path(input_fastq).name}")
+
+        return {
+            'metrics': metrics,
+            'html_report': str(html_path),
+            'json_metrics': str(json_path),
+            'status': metrics['status'],
+            'engine': 'python'
+        }
+
+    except Exception as e:
+        qc_logger.error(f"Error in Python FASTQ QC: {e}")
+        import traceback
+        qc_logger.debug(traceback.format_exc())
+        return None
+
+
+def run_advanced_fastq_qc(input_fastq, output_dir, sample_size=10000, prefer_sequali=True):
+    """
+    Run advanced FASTQ quality control with HYBRID approach
+
+    PRIMARY: Sequali (C++ engine) - fast, professional reports
+    FALLBACK: Python implementation - reliable, no external dependencies
+
+    This function implements the approach from fastqcli.py where Sequali is
+    the primary method used for production analysis.
+
+    Args:
+        input_fastq (str): Path to input FASTQ file
+        output_dir (Path): Output directory
+        sample_size (int): Number of reads for Python fallback (default: 10000)
+        prefer_sequali (bool): Try Sequali first if True (default: True)
+
+    Returns:
+        dict: Dictionary with analysis metrics and report paths, or None if failed
+    """
+    qc_logger.header(f"Advanced FASTQ QC for {Path(input_fastq).name}")
+    qc_logger.check("Checking available QC engines...")
+
+    # Attempt 1: Sequali (PRIMARY METHOD)
+    if prefer_sequali and has_sequali():
+        qc_logger.ok("Sequali available - using PRIMARY method")
+        qc_logger.separator()
+
+        try:
+            result = run_sequali_qc(input_fastq, output_dir)
+            if result:
+                qc_logger.ok("✓ QC completed using Sequali (PRIMARY)")
+                qc_logger.separator()
+                return result
+            else:
+                qc_logger.warning("Sequali failed, falling back to Python...")
+        except Exception as e:
+            qc_logger.warning(f"Sequali error: {e}, falling back to Python...")
+    else:
+        qc_logger.warning("Sequali not available")
+
+    # Attempt 2: Python fallback (RELIABLE FALLBACK)
+    qc_logger.info("Using Python implementation (FALLBACK)")
+    qc_logger.separator()
+
+    result = run_python_fastq_qc(input_fastq, output_dir, sample_size)
+    if result:
+        qc_logger.ok("✓ QC completed using Python fallback")
+        qc_logger.separator()
+        return result
+    else:
+        qc_logger.error("❌ Both Sequali and Python methods failed")
+        qc_logger.separator()
+        return None
 
 
 def run_quality_control(input_files, output_path, reference_genome=None):
@@ -50,16 +415,28 @@ def run_quality_control(input_files, output_path, reference_genome=None):
             
             # Determine file type and run appropriate QC
             if input_file.endswith(('.fastq', '.fq', '.fastq.gz', '.fq.gz')):
-                # Run FastQC for FASTQ files
-                fastqc_report = run_fastqc(input_file, file_output_dir)
-                if fastqc_report:
-                    results['qc_reports'].append(fastqc_report)
-                    
+                # Run advanced FASTQ QC (using QualityControlSuite components)
+                qc_logger.info(f"Running advanced FASTQ QC for {input_file}")
+                advanced_qc_results = run_advanced_fastq_qc(input_file, file_output_dir)
+
+                if advanced_qc_results:
+                    results['qc_reports'].append(advanced_qc_results['html_report'])
+                    results['metrics'][input_file] = advanced_qc_results['metrics']
+                    qc_logger.ok(f"Advanced QC completed for {input_file}")
+                else:
+                    qc_logger.warning(f"Advanced QC failed, falling back to FastQC")
+                    # Fallback to traditional FastQC if advanced QC fails
+                    fastqc_report = run_fastqc(input_file, file_output_dir)
+                    if fastqc_report:
+                        results['qc_reports'].append(fastqc_report)
+
                 # Analyze GC content
                 if reference_genome:
                     gc_analysis = analyze_gc_content(input_file, reference_genome, file_output_dir)
                     if gc_analysis:
-                        results['metrics'][input_file] = {'gc_content': gc_analysis}
+                        if input_file not in results['metrics']:
+                            results['metrics'][input_file] = {}
+                        results['metrics'][input_file]['gc_content'] = gc_analysis
                         
             elif input_file.endswith(('.bam', '.cram')):
                 # Analyze coverage and depth for BAM/CRAM files
@@ -168,17 +545,21 @@ def validate_vcf_file(input_vcf, output_dir):
 def analyze_gc_content(input_fastq, reference_genome, output_dir):
     """
     Analyze GC content using Biopython
-    
+
     Args:
         input_fastq (str): Path to input FASTQ file
         reference_genome (str): Path to reference genome
         output_dir (Path): Output directory
-        
+
     Returns:
         dict: Dictionary with GC content analysis or None if failed
     """
+    if not BIOPYTHON_SUPPORT:
+        logger.warning("Biopython not available. Skipping GC content analysis.")
+        return None
+
     logger.info(f"Analyzing GC content for {input_fastq}")
-    
+
     try:
         # For this example, we'll calculate GC content of the reference genome
         # In a real implementation, you might want to calculate GC content of reads
@@ -216,16 +597,20 @@ def analyze_gc_content(input_fastq, reference_genome, output_dir):
 def analyze_bam_coverage_depth(input_bam, output_dir):
     """
     Analyze coverage and depth of sequencing from BAM file using pysam and pysamstats
-    
+
     Args:
         input_bam (str): Path to input BAM file
         output_dir (Path): Output directory
-        
+
     Returns:
         dict: Dictionary with coverage metrics or None if failed
     """
+    if not BAM_SUPPORT:
+        logger.warning("pysam/pysamstats not available. Skipping BAM coverage analysis.")
+        return None
+
     logger.info(f"Analyzing BAM coverage and depth for {input_bam}")
-    
+
     try:
         # Open BAM file
         bam_file = pysam.AlignmentFile(input_bam, "rb")
@@ -279,16 +664,20 @@ def analyze_bam_coverage_depth(input_bam, output_dir):
 def generate_coverage_plot(input_bam, output_dir):
     """
     Generate coverage plot from BAM file
-    
+
     Args:
         input_bam (str): Path to input BAM file
         output_dir (Path): Output directory
-        
+
     Returns:
         str: Path to coverage plot or None if failed
     """
+    if not BAM_SUPPORT or not MATPLOTLIB_SUPPORT:
+        logger.warning("pysam or matplotlib not available. Skipping coverage plot generation.")
+        return None
+
     logger.info(f"Generating coverage plot for {input_bam}")
-    
+
     try:
         # Open BAM file
         bam_file = pysam.AlignmentFile(input_bam, "rb")
