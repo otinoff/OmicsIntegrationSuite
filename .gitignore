@@ -86,3 +86,32 @@ secrets.yaml
 
 # OS specific
 Thumbs.db
+
+# Application data directories
+data/
+data_storage/
+cache/
+qc_reports/
+reports/
+test_output/
+test_storage/
+transcriptomics_output/
+test_data/
+
+# Session and test files
+SESSION_SUMMARY_*.md
+test_*.py
+!test_integration.py
+
+# Temporary documentation (for development)
+*_TEST_RESULTS.md
+*_INTEGRATION_COMPLETE.md
+*_OPTIMIZATION.md
+*_VISUAL.txt
+QUICK_START_GUIDE.md
+
+# Utility scripts (local only)
+quick_upload.bat
+
+# M directory (unknown purpose)
+M/
