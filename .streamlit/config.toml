@@ -1,0 +1,19 @@
+[server]
+# Максимальный размер загружаемого файла (в MB)
+# 5 GB = 5120 MB
+maxUploadSize = 5120
+
+# Порт для production
+port = 8520
+address = "0.0.0.0"
+headless = true
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "light"
+primaryColor = "#667eea"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f0f2f6"
+textColor = "#262730"

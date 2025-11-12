@@ -30,8 +30,9 @@ def render_mirna_module():
             
             uploaded_file = st.file_uploader(
                 f"Загрузите {file_type} файл",
-                type=['fastq', 'fq', 'tsv', 'csv', 'txt'],
-                accept_multiple_files=True
+                type=['fastq', 'fq', 'gz', 'tsv', 'csv', 'txt'],
+                accept_multiple_files=True,
+                help="Поддерживаются файлы до 5 GB. Архивы .gz разрешены."
             )
             
             if uploaded_file:
@@ -49,9 +50,10 @@ def render_mirna_module():
             
             st.markdown("### ⚡ Рекомендации")
             st.markdown("""
-            - Максимальный размер файла: 2 GB
+            - Максимальный размер файла: 5 GB
             - Поддерживаемые платформы: Illumina, Ion Torrent
             - Автоматическое определение формата
+            - Архивы .gz автоматически распаковываются
             """)
     
     with tab2:
