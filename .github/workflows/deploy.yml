@@ -55,7 +55,7 @@ jobs:
           echo "Deployment completed successfully!"
           echo "Web interface available at: http://omicsintegrationsuite.onff.ru/"
     
-    - name: Detailed Health Check
+    - name: FORCE DETAILED DIAGNOSTICS
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: 5.35.88.251
@@ -65,13 +65,48 @@ jobs:
         script: |
           cd /var/OmicsIntegrationSuite
 
-          # Run detailed health check
-          if [ -f "check_health.sh" ]; then
-            chmod +x check_health.sh
-            ./check_health.sh
+          echo "=========================================="
+          echo "🔍 FORCED DIAGNOSTICS OUTPUT"
+          echo "=========================================="
+          echo ""
+
+          echo "1️⃣ Python Version:"
+          python3 --version
+          echo ""
+
+          echo "2️⃣ Streamlit Installation:"
+          python3 -c "import streamlit; print(f'Streamlit {streamlit.__version__}')" || echo "❌ STREAMLIT NOT INSTALLED!"
+          echo ""
+
+          echo "3️⃣ Current Streamlit Processes:"
+          ps aux | grep streamlit | grep -v grep || echo "❌ NO STREAMLIT PROCESS RUNNING!"
+          echo ""
+
+          echo "4️⃣ Port 8520 Status:"
+          ss -tulpn | grep 8520 || echo "❌ PORT 8520 NOT LISTENING!"
+          echo ""
+
+          echo "5️⃣ Last 50 Lines of streamlit.log:"
+          if [ -f "streamlit.log" ]; then
+            tail -50 streamlit.log
           else
-            echo "⚠️ check_health.sh not found, running basic check..."
-            ls -la main.py web_interface.py
-            python3 --version
-            ps aux | grep streamlit | head -5
+            echo "❌ streamlit.log NOT FOUND!"
           fi
+          echo ""
+
+          echo "6️⃣ Test Local Connection:"
+          curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" http://localhost:8520 || echo "❌ CURL FAILED!"
+          echo ""
+
+          echo "7️⃣ Git Status:"
+          git log --oneline -3
+          git status --short
+          echo ""
+
+          echo "8️⃣ Files Present:"
+          ls -lah web_interface*.py start_streamlit.sh 2>/dev/null || echo "Files missing!"
+          echo ""
+
+          echo "=========================================="
+          echo "END DIAGNOSTICS"
+          echo "=========================================="
