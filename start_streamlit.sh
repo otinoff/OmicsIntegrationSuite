@@ -20,9 +20,18 @@ fi
 # Остановка предыдущего процесса Streamlit если он запущен
 pkill -f "streamlit run" 2>/dev/null
 
+# Выбираем версию для запуска (minimal если есть)
+if [ -f "web_interface_minimal.py" ]; then
+    INTERFACE_FILE="web_interface_minimal.py"
+    echo "⚠️ Using MINIMAL version for troubleshooting"
+else
+    INTERFACE_FILE="web_interface.py"
+    echo "Using full version"
+fi
+
 # Запуск Streamlit в фоновом режиме
 echo "Launching Streamlit on port $STREAMLIT_SERVER_PORT..."
-nohup streamlit run web_interface.py \
+nohup streamlit run $INTERFACE_FILE \
     --server.port $STREAMLIT_SERVER_PORT \
     --server.address $STREAMLIT_SERVER_ADDRESS \
     --server.headless true \
