@@ -20,6 +20,17 @@ def render_mirna_module():
     if 'processing_complete' not in st.session_state:
         st.session_state.processing_complete = False
 
+    # Показываем информацию о загруженных файлах (видна во всех табах)
+    if st.session_state.uploaded_files:
+        with st.expander("📁 Загруженные файлы", expanded=True):
+            st.success(f"✅ {len(st.session_state.uploaded_files)} файл(ов) готовы к обработке")
+            for file in st.session_state.uploaded_files:
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.text(f"📄 {file.name}")
+                with col2:
+                    st.text(f"{file.size / 1024 / 1024:.2f} MB")
+
     # Создаем табы с иконками
     tab1, tab2, tab3 = st.tabs(["📤 Загрузка данных", "⚙️ Обработка", "📊 Результаты"])
     
@@ -99,7 +110,6 @@ def render_mirna_module():
             st.warning("⚠️ Сначала загрузите файлы в разделе '📤 Загрузка данных'")
             st.button("🚀 Начать обработку", type="primary", disabled=True)
         else:
-            st.info(f"✅ Готово к обработке: {len(st.session_state.uploaded_files)} файл(ов)")
 
             if st.button("🚀 Начать обработку", type="primary"):
                 with st.spinner("Обработка данных..."):
