@@ -110,3 +110,44 @@ jobs:
           echo "=========================================="
           echo "END DIAGNOSTICS"
           echo "=========================================="
+
+          # Save diagnostics to file
+          echo "💾 Saving diagnostics to DIAGNOSTICS_OUTPUT.txt..."
+          {
+            echo "=========================================="
+            echo "🔍 SERVER DIAGNOSTICS - $(date)"
+            echo "=========================================="
+            echo ""
+            echo "1️⃣ Python Version:"
+            python3 --version
+            echo ""
+            echo "2️⃣ Streamlit Installation:"
+            python3 -c "import streamlit; print(f'Streamlit {streamlit.__version__}')" 2>&1 || echo "❌ ERROR!"
+            echo ""
+            echo "3️⃣ Current Streamlit Processes:"
+            ps aux | grep streamlit | grep -v grep || echo "❌ NO PROCESS!"
+            echo ""
+            echo "4️⃣ Port 8520 Status:"
+            ss -tulpn | grep 8520 || echo "❌ NOT LISTENING!"
+            echo ""
+            echo "5️⃣ Last 100 Lines of streamlit.log:"
+            tail -100 streamlit.log 2>&1 || echo "❌ LOG NOT FOUND!"
+            echo ""
+            echo "6️⃣ HTTP Test:"
+            curl -s -o /dev/null -w "HTTP: %{http_code}\n" http://localhost:8520 2>&1
+            echo ""
+            echo "7️⃣ Git:"
+            git log --oneline -3
+            echo ""
+            echo "8️⃣ Files:"
+            ls -lah web_interface*.py start_streamlit.sh
+          } > DIAGNOSTICS_OUTPUT.txt
+
+          # Commit diagnostics
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add DIAGNOSTICS_OUTPUT.txt
+          git commit -m "diagnostics: server output $(date +%Y-%m-%d-%H-%M)" || echo "No changes to commit"
+          git push origin main || echo "Push failed (expected)"
+
+          echo "✅ Diagnostics saved to DIAGNOSTICS_OUTPUT.txt"
