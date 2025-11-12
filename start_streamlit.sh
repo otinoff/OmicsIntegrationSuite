@@ -21,6 +21,7 @@ fi
 pkill -f "streamlit run" 2>/dev/null
 
 # Запуск Streamlit в фоновом режиме
+echo "Launching Streamlit on port $STREAMLIT_SERVER_PORT..."
 nohup streamlit run web_interface.py \
     --server.port $STREAMLIT_SERVER_PORT \
     --server.address $STREAMLIT_SERVER_ADDRESS \
@@ -29,6 +30,18 @@ nohup streamlit run web_interface.py \
     --theme.base "light" \
     > streamlit.log 2>&1 &
 
-echo "Streamlit запущен на порту $STREAMLIT_SERVER_PORT"
-echo "Логи доступны в файле streamlit.log"
-echo "Веб-интерфейс доступен по адресу: http://omicsintegrationsuite.onff.ru/"
+STREAMLIT_PID=$!
+echo "Streamlit PID: $STREAMLIT_PID"
+
+# Подождем 3 секунды и проверим что процесс запустился
+sleep 3
+
+if ps -p $STREAMLIT_PID > /dev/null 2>&1; then
+    echo "✅ Streamlit successfully started on port $STREAMLIT_SERVER_PORT"
+    echo "📋 Logs: tail -f streamlit.log"
+    echo "🌐 Web interface: http://omicsintegrationsuite.onff.ru/"
+else
+    echo "❌ ERROR: Streamlit failed to start!"
+    echo "📋 Check logs: tail -50 streamlit.log"
+    exit 1
+fi
