@@ -1,10 +1,13 @@
 name: Deploy to Server
 
 on:
-  push:
-    branches:
-      - main
-      - master
+  # ❌ ОТКЛЮЧЕН автоматический деплой (вызывал 502 при каждом push)
+  # push:
+  #   branches:
+  #     - main
+  #     - master
+
+  # ✅ Только ручной запуск через GitHub Actions UI
   workflow_dispatch:
 
 jobs:
@@ -143,11 +146,11 @@ jobs:
             ls -lah web_interface*.py start_streamlit.sh
           } > DIAGNOSTICS_OUTPUT.txt
 
-          # Commit diagnostics
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add DIAGNOSTICS_OUTPUT.txt
-          git commit -m "diagnostics: server output $(date +%Y-%m-%d-%H-%M)" || echo "No changes to commit"
-          git push origin main || echo "Push failed (expected)"
+          # ❌ НЕ коммитим диагностику обратно (вызывало бесконечный цикл!)
+          # git config user.name "GitHub Actions"
+          # git config user.email "actions@github.com"
+          # git add DIAGNOSTICS_OUTPUT.txt
+          # git commit -m "diagnostics: server output $(date +%Y-%m-%d-%H-%M)" || echo "No changes to commit"
+          # git push origin main || echo "Push failed (expected)"
 
-          echo "✅ Diagnostics saved to DIAGNOSTICS_OUTPUT.txt"
+          echo "✅ Diagnostics saved to DIAGNOSTICS_OUTPUT.txt (local only)"
