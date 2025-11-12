@@ -10,10 +10,16 @@ import random
 
 def render_mirna_module():
     """Отображение модуля микроРНК"""
-    
+
     st.header("🔬 Модуль обработки данных микроРНК")
     st.info("Модуль для анализа miRNA-seq данных")
-    
+
+    # Инициализация session state
+    if 'uploaded_files' not in st.session_state:
+        st.session_state.uploaded_files = None
+    if 'processing_complete' not in st.session_state:
+        st.session_state.processing_complete = False
+
     # Создаем табы с иконками
     tab1, tab2, tab3 = st.tabs(["📤 Загрузка данных", "⚙️ Обработка", "📊 Результаты"])
     
@@ -34,11 +40,16 @@ def render_mirna_module():
                 accept_multiple_files=True,
                 help="Поддерживаются файлы до 5 GB. Архивы .gz разрешены."
             )
-            
+
             if uploaded_file:
-                st.success(f"✅ Файлы успешно загружены")
+                st.session_state.uploaded_files = uploaded_file
+                st.success(f"✅ Файлы успешно загружены: {len(uploaded_file)} файл(ов)")
                 for file in uploaded_file:
-                    st.info(f"Размер: {file.size / 1024 / 1024:.2f} MB")
+                    st.info(f"📄 {file.name} - Размер: {file.size / 1024 / 1024:.2f} MB")
+            elif st.session_state.uploaded_files:
+                st.success(f"✅ Файлы загружены: {len(st.session_state.uploaded_files)} файл(ов)")
+                for file in st.session_state.uploaded_files:
+                    st.info(f"📄 {file.name} - Размер: {file.size / 1024 / 1024:.2f} MB")
         
         with col2:
             st.markdown("### 📋 Поддерживаемые форматы")
@@ -82,23 +93,45 @@ def render_mirna_module():
             filter_contamination = st.checkbox("Фильтр контаминации", value=True)
         
         st.markdown("---")
-        if st.button("🚀 Начать обработку", type="primary"):
-            with st.spinner("Обработка данных..."):
-                progress_bar = st.progress(0)
-                status_text = st.empty()
-                
-                for i in range(100):
-                    import time
-                    time.sleep(0.05)  # Имитация обработки
-                    progress_bar.progress(i + 1)
-                    status_text.info(f"Обработано: {i+1}%")
-                
-                st.success("✅ Обработка завершена!")
-                st.balloons()
+
+        # Проверка загрузки файлов
+        if not st.session_state.uploaded_files:
+            st.warning("⚠️ Сначала загрузите файлы в разделе '📤 Загрузка данных'")
+            st.button("🚀 Начать обработку", type="primary", disabled=True)
+        else:
+            st.info(f"✅ Готово к обработке: {len(st.session_state.uploaded_files)} файл(ов)")
+
+            if st.button("🚀 Начать обработку", type="primary"):
+                with st.spinner("Обработка данных..."):
+                    progress_bar = st.progress(0)
+                    status_text = st.empty()
+
+                    for i in range(100):
+                        import time
+                        time.sleep(0.05)  # Имитация обработки
+                        progress_bar.progress(i + 1)
+                        status_text.info(f"Обработано: {i+1}%")
+
+                    st.session_state.processing_complete = True
+                    st.success("✅ Обработка завершена!")
+                    st.balloons()
+                    st.info("Перейдите в раздел '📊 Результаты' для просмотра данных")
     
     with tab3:
         st.subheader("Результаты анализа")
-        
+
+        # Проверка - была ли обработка
+        if not st.session_state.processing_complete:
+            st.info("📊 Результаты появятся после обработки данных")
+            st.markdown("""
+            ### Для получения результатов:
+            1. 📤 Загрузите файлы в разделе 'Загрузка данных'
+            2. ⚙️ Настройте параметры в разделе 'Обработка'
+            3. 🚀 Нажмите 'Начать обработку'
+            4. 📊 Результаты отобразятся здесь
+            """)
+            return
+
         # Пример результатов
         col1, col2, col3 = st.columns(3)
         with col1:
