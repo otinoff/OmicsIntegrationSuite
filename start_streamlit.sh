@@ -6,7 +6,7 @@
 echo "Starting OmicsIntegrationSuite Web Interface..."
 
 # Установка переменных окружения
-export STREAMLIT_SERVER_PORT=8520
+export STREAMLIT_SERVER_PORT=8501
 export STREAMLIT_SERVER_ADDRESS=0.0.0.0
 export STREAMLIT_SERVER_HEADLESS=true
 export STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
