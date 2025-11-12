@@ -45,14 +45,7 @@ jobs:
           
           # Делаем скрипты исполняемыми
           chmod +x *.sh 2>/dev/null || true
-          chmod +x scripts/*.sh 2>/dev/null || true
-
-          # Настраиваем Nginx для больших файлов (5GB)
-          if [ -f "scripts/configure_nginx.sh" ]; then
-            echo "Configuring Nginx for 5GB uploads..."
-            ./scripts/configure_nginx.sh
-          fi
-
+          
           # Запускаем Streamlit веб-интерфейс
           ./start_streamlit.sh
           
