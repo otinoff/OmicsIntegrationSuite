@@ -200,6 +200,7 @@ def run_sequali_qc(input_fastq, output_dir):
                 total_bases = summary.get('total_bases', 0)
                 mean_length = summary.get('mean_length', 0)
                 q20_bases = summary.get('q20_bases', 0)
+                q20_reads = summary.get("q20_reads", 0)
                 q30_bases = summary.get('q30_bases', 0)
                 gc_bases = summary.get('total_gc_bases', 0)
                 n_bases = summary.get('total_n_bases', 0)
@@ -225,6 +226,7 @@ def run_sequali_qc(input_fastq, output_dir):
                     'avg_read_length': mean_length,
                     'min_read_length': summary.get('min_length', 0),
                     'max_read_length': summary.get('max_length', 0),
+                    'q20_reads': q20_reads,
                     'q20_percentage': q20_pct,
                     'q30_percentage': q30_pct,
                     'gc_content': gc_pct,
@@ -248,7 +250,17 @@ def run_sequali_qc(input_fastq, output_dir):
             metrics = {
                 'html_only': True,
                 'file_size_mb': file_size_mb,
-                'status': 'PASS'  # Assume PASS if Sequali completed
+                'status': 'PASS',  # Assume PASS if Sequali completed
+                # Add missing keys with placeholder values to prevent KeyError:
+                'total_reads': 0,
+                'total_bases': 0,
+                'avg_read_length': 0.0,
+                'min_read_length': 0,
+                'max_read_length': 0,
+                'q20_percentage': 0.0,
+                'q30_percentage': 0.0,
+                'gc_content': 0.0,
+                'n_percentage': 0.0
             }
             status = 'PASS'
 

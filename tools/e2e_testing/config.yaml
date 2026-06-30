@@ -1,0 +1,56 @@
+# E2E Testing Configuration
+# Configuration for OmicsIntegrationSuite E2E testing tool
+
+# Global settings
+global:
+  base_url: "https://omicsintegrationsuite.onff.ru"
+  default_timeout: 600  # seconds
+  headless: false
+  check_interval: 30  # seconds between processing checks
+
+# SSH settings for server validation
+ssh:
+  key_path: "C:\\.ssh\\id_rsa"
+  server: "root@omicsintegrationsuite.onff.ru"
+  timeout: 10  # seconds
+
+# Proteomics module configuration
+proteomics:
+  test_files:
+    - "tiny.pwiz.1.1.mzML"
+    - "tiny4_LTQ-FT.mzML"
+    - "demo_pride_example.mzML"
+
+  marker_file: "/tmp/proteomics_processing_started.txt"
+  json_export: "/var/OmicsIntegrationSuite/data/validation_json/proteomics_latest_results.json"
+  processed_dir: "/var/OmicsIntegrationSuite/data/proteomics/processed/"
+
+  expected_module_name: "proteomics"
+
+# miRNA module configuration
+mirna:
+  test_files:
+    - "test_mirna_sample.fasta"
+
+  marker_file: "/tmp/mirna_processing_started.txt"
+  json_export: "/var/OmicsIntegrationSuite/data/validation_json/mirna_latest_results.json"
+  processed_dir: "/var/OmicsIntegrationSuite/data/mirna/processed/"
+
+  expected_module_name: "mirna"
+
+# Genomics module configuration
+genomics:
+  test_files:
+    - "test_genomics_sample.vcf"
+
+  marker_file: "/tmp/genomics_processing_started.txt"
+  json_export: "/var/OmicsIntegrationSuite/data/validation_json/genomics_latest_results.json"
+  processed_dir: "/var/OmicsIntegrationSuite/data/genomics/processed/"
+
+  expected_module_name: "genomics"
+
+# Reporting settings
+reporting:
+  verbose: true
+  save_logs: true
+  log_dir: "./logs"
